@@ -7,6 +7,7 @@ interface Movie {
     director: string;
     genre: string;
     overview: string;
+    rating: number;
 }
 
 function HomePage() {
@@ -89,7 +90,24 @@ function HomePage() {
 
     const handleRatingSubmit = () => {
         // Perform rating submission logic here
-        console.log('Submitted rating:', rating);
+        // Create a rating object with the necessary data
+        const ratingData = {
+            user: localStorage.getItem('your_user_id'), // Replace with the actual user ID
+            movieTitle: selectedMovie?.title,
+            rating: parseFloat(rating),
+        };
+
+        // Send a POST request to the addrating endpoint
+        axios
+            .post('/ProjectMovies/addrating', ratingData)
+            .then((response) => {
+                const newRating = response.data;
+                console.log('Successfully added rating:', newRating);
+                // Do something with the new rating if needed
+            })
+            .catch((error) => {
+                console.error('Failed to add rating:', error);
+            });
     };
 
     return (
@@ -112,6 +130,7 @@ function HomePage() {
                     <p>Director: {selectedMovie.director}</p>
                     <p>Genre: {selectedMovie.genre}</p>
                     <p>Overview: {selectedMovie.overview}</p>
+                    <p>Rating: {selectedMovie.rating}</p>
                     <Button variant="contained" onClick={() => setSelectedMovie(null)}>
                         Close Overview
                     </Button>
@@ -138,6 +157,7 @@ function HomePage() {
                         <h3>{movie.title}</h3>
                         <p>Director: {movie.director}</p>
                         <p>Genre: {movie.genre}</p>
+                        <p>Rating: {movie.rating}</p>
                     </div>
                 ))
             )}
