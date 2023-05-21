@@ -10,6 +10,11 @@ interface Movie {
     rating: number;
 }
 
+interface Rating {
+    movie: Movie;
+    rating: number;
+}
+
 function HomePage() {
     const [movies, setMovies] = useState<Movie[]>([]);
     const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
@@ -17,6 +22,9 @@ function HomePage() {
     const [selectedFilter, setSelectedFilter] = useState('title');
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [rating, setRating] = useState('');
+    const [ratings, setRatings] = useState<Rating[]>([]);
+    const [loggedInUserUsername, setLoggedInUserUsername] = useState('');
+    const [showUserRatings, setShowUserRatings] = useState(false);
 
     useEffect(() => {
         fetchMovies();
@@ -25,6 +33,25 @@ function HomePage() {
     useEffect(() => {
         filterMovies();
     }, [searchText]);
+
+    useEffect(() => {
+        const username = localStorage.getItem('your_user_username');
+        if (username) {
+            setLoggedInUserUsername(username);
+            fetchUserRatings(username);
+        }
+    }, []);
+
+    const fetchUserRatings = (username: string) => {
+        axios
+            .get(`http://localhost:8080/ProjectMovies/userRatings?username=${username}`)
+            .then((response) => {
+                setRatings(response.data);
+            })
+            .catch((error) => {
+                console.error('Failed to fetch user ratings:', error);
+            });
+    };
 
     async function fetchMovies() {
         try {
@@ -92,7 +119,7 @@ function HomePage() {
         // Perform rating submission logic here
         // Create a rating object with the necessary data
         const ratingData = {
-            user: localStorage.getItem('your_user_id'), // Replace with the actual user ID
+            username: loggedInUserUsername,
             movieTitle: selectedMovie?.title,
             rating: parseFloat(rating),
         };
@@ -152,14 +179,38 @@ function HomePage() {
                     </div>
                 </div>
             ) : (
-                filteredMovies.map((movie) => (
-                    <div key={movie.title} onClick={() => handleMovieClick(movie)}>
-                        <h3>{movie.title}</h3>
-                        <p>Director: {movie.director}</p>
-                        <p>Genre: {movie.genre}</p>
-                        <p>Rating: {movie.rating}</p>
-                    </div>
-                ))
+                <div>
+                    <h2
+                        onClick={() => setShowUserRatings(!showUserRatings)}
+                        style={{ cursor: 'pointer', transition: 'color 0.3s' }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = 'gold';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = 'black';
+                        }}
+                    >
+                        User Ratings
+                    </h2>
+                    {showUserRatings && (
+                        <ul>
+                            {ratings.map((rating: Rating, index: number) => (
+                                <li key={index}>
+                                    <p>Movie: {rating.movie.title}</p>
+                                    <p>Rating: {rating.rating}</p>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    {filteredMovies.map((movie) => (
+                        <div key={movie.title} onClick={() => handleMovieClick(movie)}>
+                            <h3>{movie.title}</h3>
+                            <p>Director: {movie.director}</p>
+                            <p>Genre: {movie.genre}</p>
+                            <p>Rating: {movie.rating}</p>
+                        </div>
+                    ))}
+                </div>
             )}
         </Box>
     );

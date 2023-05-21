@@ -8,6 +8,7 @@ interface UserLogin {
     username: string;
     email: string;
     password: string;
+
 }
 
 const Login = (props: any) => {
@@ -28,7 +29,9 @@ const Login = (props: any) => {
             .then((res) => {
                 const { token } = res.data;
                 localStorage.setItem('token', token); // Store the token in localStorage
-                localStorage.setItem('your_user_id', user.username);
+                localStorage.setItem('your_user_username', user.username);
+                //localStorage.setItem('your_user_id',user.id);
+
                 navigate('/homepage', { state: { userId: res.data.userId } });
             })
             .catch((err) => {
