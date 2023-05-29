@@ -1,0 +1,58 @@
+.movie-item {
+    cursor: pointer;
+}
+
+.movie-details {
+    display: none;
+}
+
+.movie-item:hover .movie-details {
+    display: block;
+}
+.rating-square {
+    display: inline-block;
+    width: 35px;
+    height: 20px;
+    background-color: #E6F0FF; /* Set your desired background color */
+    color: #9B59B6; /* Set your desired text color */
+    text-align: center;
+    line-height: 20px;
+    font-weight: bold;
+}
+.gradient-slider {
+    width: 100%;
+    background: linear-gradient(to right, #ADD8E6, #800080);
+    height: 8px;
+    border-radius: 4px;
+    outline: none;
+    appearance: none;
+}
+
+.gradient-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #000000;
+    cursor: pointer;
+}
+
+.gradient-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #000000;
+    cursor: pointer;
+}
+button {
+
+    color: #800080;
+}
+button:hover
+{
+
+    color: #ADD8E6;
+}
+.button-container {
+    display: flex;
+}

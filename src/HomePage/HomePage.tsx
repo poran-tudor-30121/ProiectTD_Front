@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Autocomplete, Box, Button } from '@mui/material';
 import axios from 'axios';
+import './HomePage.css';
 
 interface Movie {
     title: string;
@@ -43,8 +44,9 @@ function HomePage() {
     }, []);
 
     const fetchUserRatings = (username: string) => {
+        const userUserDTO = {username: username};
         axios
-            .get(`http://localhost:8080/ProjectMovies/userRatings?username=${username}`)
+            .post('/ProjectMovies/userRatings', userUserDTO)
             .then((response) => {
                 setRatings(response.data);
             })
@@ -52,6 +54,17 @@ function HomePage() {
                 console.error('Failed to fetch user ratings:', error);
             });
     };
+    async function refreshMovies()
+    {
+        try {
+            let response;
+            response = await axios.post<Movie[]>('http://localhost:8080/ProjectMovies/movies');
+            setMovies(response.data);
+        }catch(error)
+        {
+            console.error(error);
+        }
+    }
 
     async function fetchMovies() {
         try {
@@ -115,21 +128,28 @@ function HomePage() {
         setRating(formattedRating);
     };
 
+
     const handleRatingSubmit = () => {
-        // Perform rating submission logic here
-        // Create a rating object with the necessary data
+        if (!loggedInUserUsername || !selectedMovie || !rating) {
+            console.error('Incomplete data for rating submission');
+            return;
+        }
+
         const ratingData = {
-            username: loggedInUserUsername,
-            movieTitle: selectedMovie?.title,
+            user: loggedInUserUsername,
+            movieTitle: selectedMovie.title,
             rating: parseFloat(rating),
         };
 
-        // Send a POST request to the addrating endpoint
         axios
             .post('/ProjectMovies/addrating', ratingData)
             .then((response) => {
                 const newRating = response.data;
                 console.log('Successfully added rating:', newRating);
+
+                 refreshMovies();
+                fetchUserRatings(ratingData.user);
+
                 // Do something with the new rating if needed
             })
             .catch((error) => {
@@ -137,83 +157,117 @@ function HomePage() {
             });
     };
 
+
     return (
-        <Box>
-            <TextField
-                label="Search"
-                value={searchText}
-                onChange={handleSearchTextChange}
-                style={{ marginBottom: '1rem' }}
-            />
-            <Autocomplete
-                options={['title', 'director', 'genre']}
-                value={selectedFilter}
-                onChange={handleFilterChange}
-                renderInput={(params) => <TextField {...params} label="Filter By" />}
-            />
-            {selectedMovie ? (
+        <Box display="flex">
+            {/* Left side */}
+            <Box flex="1" marginRight="1rem">
+                <TextField
+                    label="Search"
+                    value={searchText}
+                    onChange={handleSearchTextChange}
+                    style={{ marginBottom: '1rem' }}
+                />
+                {/* Filter checkboxes */}
                 <div>
-                    <h3>{selectedMovie.title}</h3>
-                    <p>Director: {selectedMovie.director}</p>
-                    <p>Genre: {selectedMovie.genre}</p>
-                    <p>Overview: {selectedMovie.overview}</p>
-                    <p>Rating: {selectedMovie.rating}</p>
-                    <Button variant="contained" onClick={() => setSelectedMovie(null)}>
-                        Close Overview
-                    </Button>
+                    <input
+                        type="checkbox"
+                        checked={selectedFilter === 'title'}
+                        onChange={(event) => handleFilterChange(event, 'title')}
+                    />
+                    <label>Title</label>
+                </div>
+                <div>
+                    <input
+                        type="checkbox"
+                        checked={selectedFilter === 'director'}
+                        onChange={(event) => handleFilterChange(event, 'director')}
+                    />
+                    <label>Director</label>
+                </div>
+                <div>
+                    <input
+                        type="checkbox"
+                        checked={selectedFilter === 'genre'}
+                        onChange={(event) => handleFilterChange(event, 'genre')}
+                    />
+                    <label>Genre</label>
+                </div>
+                {selectedMovie ? (
                     <div>
-                        <TextField
-                            type="number"
-                            label="Rating"
-                            value={rating}
-                            onChange={handleRatingChange}
-                            inputProps={{
-                                step: '0.01',
-                                min: '0',
-                                max: '10',
-                            }}
-                        />
-                        <Button variant="contained" onClick={handleRatingSubmit}>
-                            Submit Rating
+                        <h3>{selectedMovie.title}</h3>
+                        <p>Director: {selectedMovie.director}</p>
+                        <p>Genre: {selectedMovie.genre}</p>
+                        <p>Overview: {selectedMovie.overview}</p>
+                        <p>Rating: {selectedMovie.rating?.toFixed(2)}</p>
+                        <Button variant="contained" onClick={() => setSelectedMovie(null)} className="button-container" color = "secondary">
+                            Close Overview
                         </Button>
-                    </div>
-                </div>
-            ) : (
-                <div>
-                    <h2
-                        onClick={() => setShowUserRatings(!showUserRatings)}
-                        style={{ cursor: 'pointer', transition: 'color 0.3s' }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.color = 'gold';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.color = 'black';
-                        }}
-                    >
-                        User Ratings
-                    </h2>
-                    {showUserRatings && (
-                        <ul>
-                            {ratings.map((rating: Rating, index: number) => (
-                                <li key={index}>
-                                    <p>Movie: {rating.movie.title}</p>
-                                    <p>Rating: {rating.rating}</p>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                    {filteredMovies.map((movie) => (
-                        <div key={movie.title} onClick={() => handleMovieClick(movie)}>
-                            <h3>{movie.title}</h3>
-                            <p>Director: {movie.director}</p>
-                            <p>Genre: {movie.genre}</p>
-                            <p>Rating: {movie.rating}</p>
+                        <div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="10"
+                                step="0.01"
+                                value={rating}
+                                onChange={handleRatingChange}
+                                className="gradient-slider"
+                            />
+                            <p>Rating: {rating}</p>
+                            <Button variant="contained" onClick={handleRatingSubmit} className="button-container" color = "secondary">
+                                Submit Rating
+                            </Button>
                         </div>
-                    ))}
-                </div>
-            )}
+                    </div>
+                ) : (
+                    filteredMovies.map((movie) => (
+                        <div
+                            key={movie.title}
+                            onClick={() => handleMovieClick(movie)}
+                            className="movie-item"
+                        >
+                            <h3>{movie.title}</h3>
+                            <div className="movie-details">
+                                <p className="hidden-info">Director: {movie.director}</p>
+                                <p className="hidden-info">Genre: {movie.genre}</p>
+                                <p className="hidden-info">Rating: {movie.rating?.toFixed(2)}</p>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </Box>
+            {/* Right side */}
+            <Box flex="1">
+                <h2
+                    onClick={() => setShowUserRatings(!showUserRatings)}
+                    style={{
+                        cursor: 'pointer',
+                        transition: 'color 0.3s',
+                        color: loggedInUserUsername ? 'purple' : 'black',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'blue';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.color = loggedInUserUsername ? 'purple' : 'black';
+                    }}
+                >
+                    {loggedInUserUsername ? `${loggedInUserUsername} Ratings` : 'User Ratings'}
+                </h2>
+                {showUserRatings && (
+                    <ul>
+                        {ratings.map((rating, index) => (
+                            <li key={index}>
+                                <p> {rating.movie.title} <div className="rating-square">{rating.rating}</div>  </p>
+
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </Box>
         </Box>
     );
+
 }
 
 export default HomePage;

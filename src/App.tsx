@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import Register from "./Register/Register";
 import Login from "./Login/Login";
+import FirstView from './FirstView/FirstView';
 import {RouterProvider} from "react-router";
 import {createBrowserRouter} from "react-router-dom";
 import HomePage from "./HomePage/HomePage";
@@ -21,15 +22,21 @@ const router = createBrowserRouter([
     {
         path:"/homepage",
         element:<HomePage/>
+    },
+    {
+        path:"/firstview",
+        element:<FirstView/>
     }
 ])
-function App() {
-  return (
-    <div className="App">
-        <RouterProvider router={router}></RouterProvider>
+const App = () => {
+    React.useEffect(() => {
+        router.navigate('/firstview');
+    }, []);
+    return (
+        <div className="App">
+            <RouterProvider router={router}></RouterProvider>
 
-    </div>
-  );
+        </div>
+    )
 }
-
 export default App;
